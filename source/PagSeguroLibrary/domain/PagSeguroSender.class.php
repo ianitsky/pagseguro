@@ -193,11 +193,19 @@ class PagSeguroSender
         } elseif (array_key_exists('HTTP_X_FORWARDED_FOR', $headers)
             && filter_var($headers['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             $ip = $headers['HTTP_X_FORWARDED_FOR'];
- 
+
+        } elseif (isset($_SERVER['REMOTE_ADDR'])) {
+	        $ip = filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP);
         } else {
-            $ip = filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP);
+	        $ips = $this->getServerIPs(false);
+	        $ip = $ips[0];
         }
 
-        $this->ip = $ip;
+	    $this->ip = $ip;
     }
+
+	function getServerIPs($withV6 = true) {
+		preg_match_all('/inet'.($withV6 ? '6?' : '').' addr: ?([^ ]+)/', `ifconfig`, $ips);
+		return $ips[1];
+	}
 }
